@@ -53,12 +53,16 @@ select option{background:#1a1a3a;color:#e0e0e0}
 .value.purple{color:#b388ff}
 .value.orange{color:#ffab40}
 .value.red{color:#ff5252}
+.value.gray{color:#556677}
 .total-row{display:flex;justify-content:space-between;align-items:center;padding:18px 20px;background:linear-gradient(135deg,rgba(247,151,30,0.08),rgba(255,210,0,0.08));border-radius:14px;margin-top:10px;border:1px solid rgba(255,215,0,0.1)}
 .total-row .label{font-size:16px;font-weight:600;color:#ffd200}
 .total-row .value{font-size:28px;font-weight:900;color:#ffd200}
 .invoice-table{width:100%;border-collapse:collapse;margin:15px 0;font-size:13px}
 .invoice-table th{text-align:left;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.06);color:#7788aa;font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:1px}
 .invoice-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.03)}
+.invoice-table .tax-tag{font-size:10px;padding:2px 7px;border-radius:6px;font-weight:600;white-space:nowrap}
+.invoice-table .tag-intra{background:rgba(0,230,118,0.12);color:#00e676}
+.invoice-table .tag-inter{background:rgba(64,196,255,0.12);color:#40c4ff}
 .invoice-table .remove-btn{background:rgba(255,68,68,0.15);border:none;color:#ff5252;cursor:pointer;padding:4px 10px;border-radius:6px;font-size:12px;font-family:'Inter',sans-serif;transition:all 0.2s}
 .invoice-table .remove-btn:hover{background:rgba(255,68,68,0.3)}
 .empty-msg{text-align:center;padding:30px;color:#556677;font-size:13px}
@@ -68,6 +72,7 @@ select option{background:#1a1a3a;color:#e0e0e0}
 .gst-tile{text-align:center;padding:15px 10px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05)}
 .gst-tile .tax-type{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#7788aa}
 .gst-tile .tax-val{font-size:20px;font-weight:800;margin-top:4px}
+.supplier-line{font-size:12px;color:#556677;margin-top:4px}
 /* Modal */
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);z-index:1000;display:none;align-items:center;justify-content:center}
 .modal-overlay.show{display:flex}
@@ -89,7 +94,7 @@ select option{background:#1a1a3a;color:#e0e0e0}
 .toast.error{background:rgba(255,68,68,0.12);border:1px solid rgba(255,68,68,0.2);color:#ff5252}
 .toast.warning{background:rgba(255,171,64,0.12);border:1px solid rgba(255,171,64,0.2);color:#ffab40}
 /* Tabs */
-.tabs{display:flex;gap:4px;margin-bottom:20px;background:rgba(255,255,255,0.03);border-radius:14px;padding:4px}
+.tabs{display:flex;gap:4px;margin-bottom:20px;background:rgba(255,255,255,0.03);border-radius:14px;padding:4px;flex-wrap:wrap}
 .tab{padding:10px 20px;border-radius:10px;border:none;background:transparent;color:#7788aa;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.3s;font-family:'Inter',sans-serif}
 .tab.active{background:rgba(255,215,0,0.1);color:#ffd200}
 .tab:hover{color:#e0e0e0}
@@ -107,15 +112,6 @@ select option{background:#1a1a3a;color:#e0e0e0}
   .add-row select,.add-row input{width:100%}
   .gst-breakdown{grid-template-columns:1fr 1fr}
 }
-/* Lock overlay */
-.lock-overlay{position:relative}
-.lock-overlay::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(10,10,30,0.5);backdrop-filter:blur(2px);z-index:5;border-radius:24px;display:none}
-.lock-overlay.locked::before{display:block;cursor:pointer}
-.lock-badge{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:6;background:rgba(0,0,0,0.8);padding:12px 25px;border-radius:16px;border:1px solid rgba(255,215,0,0.15);display:none;flex-direction:column;align-items:center;gap:6px}
-.lock-badge.show{display:flex}
-.lock-badge .lock-icon{font-size:28px}
-.lock-badge .lock-text{font-size:13px;color:#ffd200;font-weight:600}
-.lock-badge .lock-sub{font-size:11px;color:#7788aa}
 /* watermark */
 .watermark{position:fixed;bottom:10px;right:20px;z-index:999;font-size:10px;color:rgba(255,215,0,0.08);letter-spacing:2px;text-transform:uppercase;pointer-events:none;writing-mode:vertical-rl;text-orientation:mixed}
 </style>
@@ -128,39 +124,24 @@ select option{background:#1a1a3a;color:#e0e0e0}
 
 <div class="ui-overlay">
   <header>
-    <div class="logo">GST<span>Pro</span> <small>Calculator · India</small></div>
+    <div class="logo">GST<span>Pro</span> <small>Calculator&nbsp;India</small></div>
     <div class="usage-badge">&#9889; Free Uses: <span id="usageCount">5</span> / 5</div>
   </header>
 
   <section class="hero">
     <h1>Indian GST Calculator</h1>
-    <p>Calculate CGST, SGST, IGST &amp; UTGST as per Indian GST Act. Add outward &amp; inward supplies, set supply location, and get instant tax breakdowns.</p>
-    <div class="maker-tag"><strong>Protected</strong> · Made by <strong>Gunjan</strong> · <strong>&#169;</strong> All Rights Reserved</div>
+    <p>Calculate CGST, SGST, IGST &amp; UTGST as per the Indian GST Act. Set your supplier's place of registration, then add each outward &amp; inward supply with its own place of supply for an accurate, transaction-wise tax breakdown.</p>
+    <div class="maker-tag"><strong>Protected</strong>&nbsp;Made by <strong>Gunjan</strong>&nbsp;<strong>&#169;</strong>&nbsp;All Rights Reserved</div>
   </section>
 
-  <!-- Location -->
+  <!-- Supplier Location (Place of Registration) -->
   <div class="card" style="margin-bottom:20px">
-    <h3><span class="icon">&#127758;</span> Location of Supply</h3>
-    <p>Select the supply location to determine applicable taxes (CGST+SGST for same state, IGST for inter-state, UTGST for Union Territories).</p>
-    <select id="supplyState">
-      <option value="">— Select State / UT —</option>
-      <optgroup label="States">
-        <option value="AN">Andhra Pradesh</option><option value="AR">Arunachal Pradesh</option><option value="AS">Assam</option>
-        <option value="BR">Bihar</option><option value="CT">Chhattisgarh</option><option value="GA">Goa</option><option value="GJ">Gujarat</option>
-        <option value="HR">Haryana</option><option value="HP">Himachal Pradesh</option><option value="JH">Jharkhand</option><option value="KA">Karnataka</option>
-        <option value="KL">Kerala</option><option value="MP">Madhya Pradesh</option><option value="MH">Maharashtra</option><option value="MN">Manipur</option>
-        <option value="ML">Meghalaya</option><option value="MZ">Mizoram</option><option value="NL">Nagaland</option><option value="OD">Odisha</option>
-        <option value="PB">Punjab</option><option value="RJ">Rajasthan</option><option value="SK">Sikkim</option><option value="TN">Tamil Nadu</option>
-        <option value="TS">Telangana</option><option value="TR">Tripura</option><option value="UP">Uttar Pradesh</option><option value="UK">Uttarakhand</option>
-        <option value="WB">West Bengal</option>
-      </optgroup>
-      <optgroup label="Union Territories">
-        <option value="AN">Andaman &amp; Nicobar</option><option value="CH">Chandigarh</option><option value="DN">Dadra &amp; Nagar Haveli &amp; Daman &amp; Diu</option>
-        <option value="DL">Delhi</option><option value="JK">Jammu &amp; Kashmir</option><option value="LA">Ladakh</option><option value="LD">Lakshadweep</option>
-        <option value="PY">Puducherry</option>
-      </optgroup>
+    <h3><span class="icon">&#127970;</span> Supplier Location (Place of Registration)</h3>
+    <p>Select the state/UT where the supplier is registered. This is the "location of the supplier" used to compare against each transaction's place of supply. Same place &rarr; CGST+SGST (or CGST+UTGST for UTs); different place &rarr; IGST.</p>
+    <select id="supplierState">
+      <option value=""> Select Supplier State / UT </option>
     </select>
-    <div id="taxTypeLabel" style="font-size:12px;color:#556677;margin-top:4px">Select a location to see applicable tax type.</div>
+    <div id="supplierLabel" style="font-size:12px;color:#556677;margin-top:4px">Select the supplier's registered location.</div>
   </div>
 
   <!-- Tabs -->
@@ -174,16 +155,17 @@ select option{background:#1a1a3a;color:#e0e0e0}
   <div id="tab-outward" class="tab-content">
     <div class="card" id="outwardCard">
       <h3><span class="icon">&#128200;</span> Outward Supplies (Sales)</h3>
-      <p>Add items you are selling. Select the goods/service from the GST-rated database.</p>
+      <p>Add items you are selling. Select the goods/service and the <strong>place of supply</strong> (where the recipient/delivery is) for each line. Tax type is decided per line.</p>
       <div class="add-row">
-        <select id="outwardItem"><option value="">— Select item —</option></select>
+        <select id="outwardItem"><option value=""> Select item </option></select>
+        <select id="outwardPOS"><option value=""> Place of supply </option></select>
         <input type="number" id="outwardQty" placeholder="Qty" min="1" value="1" style="max-width:80px">
         <input type="number" id="outwardRate" placeholder="Rate (&#8377;)" min="0" step="0.01" style="max-width:120px">
         <button class="btn btn-sm" onclick="addOutward()">+ Add</button>
       </div>
       <table class="invoice-table" id="outwardTable">
-        <thead><tr><th>Item</th><th>HSN</th><th>Qty</th><th>Rate</th><th>Taxable</th><th>GST%</th><th></th></tr></thead>
-        <tbody id="outwardBody"><tr><td colspan="7" class="empty-msg">No outward supplies added yet.</td></tr></tbody>
+        <thead><tr><th>Item</th><th>HSN</th><th>Place of Supply</th><th>Qty</th><th>Rate</th><th>Taxable</th><th>GST%</th><th>Type</th><th></th></tr></thead>
+        <tbody id="outwardBody"><tr><td colspan="9" class="empty-msg">No outward supplies added yet.</td></tr></tbody>
       </table>
       <div style="text-align:right;margin-top:10px;font-size:14px;color:#8899aa">Total Taxable: <strong style="color:#fff" id="outwardTotal">&#8377; 0.00</strong></div>
     </div>
@@ -192,16 +174,17 @@ select option{background:#1a1a3a;color:#e0e0e0}
   <div id="tab-inward" class="tab-content" style="display:none">
     <div class="card" id="inwardCard">
       <h3><span class="icon">&#128230;</span> Inward Supplies (Purchases / ITC)</h3>
-      <p>Add purchases to claim Input Tax Credit (ITC).</p>
+      <p>Add purchases to claim Input Tax Credit (ITC). Select the <strong>place of supply</strong> (location of the supplier you bought from) for each line so the correct ITC head (CGST+SGST/UTGST or IGST) is computed.</p>
       <div class="add-row">
-        <select id="inwardItem"><option value="">— Select item —</option></select>
+        <select id="inwardItem"><option value=""> Select item </option></select>
+        <select id="inwardPOS"><option value=""> Place of supply </option></select>
         <input type="number" id="inwardQty" placeholder="Qty" min="1" value="1" style="max-width:80px">
         <input type="number" id="inwardRate" placeholder="Rate (&#8377;)" min="0" step="0.01" style="max-width:120px">
         <button class="btn btn-sm" onclick="addInward()">+ Add</button>
       </div>
       <table class="invoice-table" id="inwardTable">
-        <thead><tr><th>Item</th><th>HSN</th><th>Qty</th><th>Rate</th><th>Taxable</th><th>GST%</th><th></th></tr></thead>
-        <tbody id="inwardBody"><tr><td colspan="7" class="empty-msg">No inward supplies added yet.</td></tr></tbody>
+        <thead><tr><th>Item</th><th>HSN</th><th>Place of Supply</th><th>Qty</th><th>Rate</th><th>Taxable</th><th>GST%</th><th>Type</th><th></th></tr></thead>
+        <tbody id="inwardBody"><tr><td colspan="9" class="empty-msg">No inward supplies added yet.</td></tr></tbody>
       </table>
       <div style="text-align:right;margin-top:10px;font-size:14px;color:#8899aa">Total ITC Eligible: <strong style="color:#00e676" id="inwardTotal">&#8377; 0.00</strong></div>
     </div>
@@ -210,7 +193,7 @@ select option{background:#1a1a3a;color:#e0e0e0}
   <div id="tab-calculator" class="tab-content" style="display:none">
     <div class="card" id="calcCard">
       <h3><span class="icon">&#128290;</span> Calculate GST</h3>
-      <p>Review your outward &amp; inward supplies, then calculate the net GST liability.</p>
+      <p>Review your outward &amp; inward supplies, then calculate the net GST liability with head-wise (CGST / SGST / UTGST / IGST) set-off as per the GST Act.</p>
       <button class="btn" onclick="calculateGST()" style="width:100%">&#9889; Calculate GST Now</button>
     </div>
   </div>
@@ -218,14 +201,15 @@ select option{background:#1a1a3a;color:#e0e0e0}
   <!-- Result -->
   <div class="result-card" id="resultCard">
     <h3 style="color:#ffd200;margin-bottom:15px;font-size:18px">&#128202; GST Calculation Summary</h3>
+    <div class="supplier-line" id="supplierSummary"></div>
     <div class="gst-breakdown" id="gstBreakdown"></div>
     <div class="result-grid" id="resultGrid"></div>
     <div class="total-row" id="netLiability">
-      <span class="label">Net GST Liability</span>
+      <span class="label">Net GST Payable</span>
       <span class="value" id="netLiabilityVal">&#8377; 0.00</span>
     </div>
     <div style="margin-top:15px;text-align:center;font-size:11px;color:#556677;border-top:1px solid rgba(255,255,255,0.04);padding-top:15px">
-      Generated by GSTPro Calculator &bull; Made by Gunjan &bull; GST Calc Engine v2.0
+      Generated by GSTPro Calculator &bull; Made by Gunjan &bull; GST Calc Engine v3.0
     </div>
   </div>
 </div>
@@ -272,7 +256,6 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 container.appendChild(renderer.domElement);
 
-// Lights
 const ambient = new THREE.AmbientLight(0x222244, 0.5);
 scene.add(ambient);
 const dirLight = new THREE.DirectionalLight(0xffd200, 0.8);
@@ -282,43 +265,30 @@ const backLight = new THREE.DirectionalLight(0x4444ff, 0.3);
 backLight.position.set(-2, -1, -3);
 scene.add(backLight);
 
-// Main Torus Knot
 const geo = new THREE.TorusKnotGeometry(1.2, 0.4, 128, 16);
 const mat = new THREE.MeshPhysicalMaterial({
-  color: 0xf7971e,
-  metalness: 0.3,
-  roughness: 0.2,
-  transparent: true,
-  opacity: 0.25,
-  wireframe: false,
-  emissive: 0xffd200,
-  emissiveIntensity: 0.08,
+  color: 0xf7971e, metalness: 0.3, roughness: 0.2,
+  transparent: true, opacity: 0.25, wireframe: false,
+  emissive: 0xffd200, emissiveIntensity: 0.08,
 });
 const knot = new THREE.Mesh(geo, mat);
 knot.position.y = 0.5;
 scene.add(knot);
 
-// Wireframe overlay
 const wireMat = new THREE.MeshPhysicalMaterial({
-  color: 0xffd200,
-  wireframe: true,
-  transparent: true,
-  opacity: 0.08,
+  color: 0xffd200, wireframe: true, transparent: true, opacity: 0.08,
 });
 const wireKnot = new THREE.Mesh(new THREE.TorusKnotGeometry(1.25, 0.43, 48, 12), wireMat);
 wireKnot.position.y = 0.5;
 scene.add(wireKnot);
 
-// Floating rings
 const rings = [];
 for (let i = 0; i < 12; i++) {
   const rGeo = new THREE.TorusGeometry(0.4 + Math.random() * 1.2, 0.02, 16, 32);
   const rMat = new THREE.MeshPhysicalMaterial({
     color: Math.random() > 0.5 ? 0xf7971e : 0x4444ff,
-    transparent: true,
-    opacity: 0.06 + Math.random() * 0.08,
-    metalness: 0.5,
-    roughness: 0.3,
+    transparent: true, opacity: 0.06 + Math.random() * 0.08,
+    metalness: 0.5, roughness: 0.3,
   });
   const ring = new THREE.Mesh(rGeo, rMat);
   ring.position.set(
@@ -327,12 +297,10 @@ for (let i = 0; i < 12; i++) {
     (Math.random() - 0.5) * 6 - 2
   );
   ring.rotation.set(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, 0);
-  ring.scale.set(1, 1, 1);
   scene.add(ring);
   rings.push({ mesh: ring, rotSpeed: { x: (Math.random() - 0.5) * 0.003, y: (Math.random() - 0.5) * 0.003 }, bob: Math.random() * Math.PI * 2 });
 }
 
-// Particles
 const pCount = 1500;
 const pGeo = new THREE.BufferGeometry();
 const positions = new Float32Array(pCount * 3);
@@ -346,16 +314,12 @@ for (let i = 0; i < pCount * 3; i += 3) {
 pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 pGeo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
 const pMat = new THREE.PointsMaterial({
-  color: 0x8888ff,
-  size: 0.015,
-  transparent: true,
-  opacity: 0.4,
+  color: 0x8888ff, size: 0.015, transparent: true, opacity: 0.4,
   blending: THREE.AdditiveBlending,
 });
 const particles = new THREE.Points(pGeo, pMat);
 scene.add(particles);
 
-// Golden sparkle particles
 const spCount = 300;
 const spGeo = new THREE.BufferGeometry();
 const spPos = new Float32Array(spCount * 3);
@@ -366,10 +330,7 @@ for (let i = 0; i < spCount * 3; i += 3) {
 }
 spGeo.setAttribute('position', new THREE.BufferAttribute(spPos, 3));
 const spMat = new THREE.PointsMaterial({
-  color: 0xffd200,
-  size: 0.025,
-  transparent: true,
-  opacity: 0.2,
+  color: 0xffd200, size: 0.025, transparent: true, opacity: 0.2,
   blending: THREE.AdditiveBlending,
 });
 const sparkles = new THREE.Points(spGeo, spMat);
@@ -392,7 +353,7 @@ function animate() {
   wireKnot.rotation.y += 0.005;
   particles.rotation.y += 0.0002;
   sparkles.rotation.y += 0.0003;
-  rings.forEach((r, i) => {
+  rings.forEach((r) => {
     r.mesh.rotation.x += r.rotSpeed.x;
     r.mesh.rotation.y += r.rotSpeed.y;
     r.bob += 0.005;
@@ -467,43 +428,68 @@ const GST_RATES = {
   'panMasala':{name:'Pan Masala',hsn:'2106',gst:28,category:'goods'},
 };
 
-// ========== STATE / UT CLASSIFICATION ==========
-const UT_STATES = ['AN','CH','DN','DL','JK','LA','LD','PY'];
-function isUT(code) { return UT_STATES.includes(code); }
-
-// ========== STATE NAMES MAP ==========
+// ========== STATE / UT NAMES (unique codes) ==========
+// FIX: Andhra Pradesh corrected to 'AP' (was duplicated with Andaman 'AN').
 const STATE_NAMES = {
-  'AN':'Andaman & Nicobar','AR':'Arunachal Pradesh','AS':'Assam','BR':'Bihar','CT':'Chhattisgarh','GA':'Goa',
+  'AP':'Andhra Pradesh','AR':'Arunachal Pradesh','AS':'Assam','BR':'Bihar','CT':'Chhattisgarh','GA':'Goa',
   'GJ':'Gujarat','HR':'Haryana','HP':'Himachal Pradesh','JH':'Jharkhand','KA':'Karnataka','KL':'Kerala',
   'MP':'Madhya Pradesh','MH':'Maharashtra','MN':'Manipur','ML':'Meghalaya','MZ':'Mizoram','NL':'Nagaland',
   'OD':'Odisha','PB':'Punjab','RJ':'Rajasthan','SK':'Sikkim','TN':'Tamil Nadu','TS':'Telangana','TR':'Tripura',
-  'UP':'Uttar Pradesh','UK':'Uttarakhand','WB':'West Bengal','CH':'Chandigarh','DN':'Dadra & Nagar Haveli',
+  'UP':'Uttar Pradesh','UK':'Uttarakhand','WB':'West Bengal',
+  // Union Territories
+  'AN':'Andaman & Nicobar','CH':'Chandigarh','DN':'Dadra & Nagar Haveli & Daman & Diu',
   'DL':'Delhi','JK':'Jammu & Kashmir','LA':'Ladakh','LD':'Lakshadweep','PY':'Puducherry'
 };
 
-// ========== ASSUMED SUPPLIER LOCATION ==========
-const SUPPLIER_STATE = 'MH'; // Maharashtra
+// Lists for grouped dropdown
+const STATES_LIST = ['AP','AR','AS','BR','CT','GA','GJ','HR','HP','JH','KA','KL','MP','MH','MN','ML','MZ','NL','OD','PB','RJ','SK','TN','TS','TR','UP','UK','WB'];
+const UT_LIST = ['AN','CH','DN','DL','JK','LA','LD','PY'];
+
+// ========== UTGST CLASSIFICATION ==========
+// FIX: Delhi (DL) and Puducherry (PY) have legislatures => they levy SGST, NOT UTGST.
+// Only these UTs (without legislature) levy UTGST.
+const UTGST_TERRITORIES = ['AN','CH','DN','JK','LA','LD'];
+function leviesUTGST(code) { return UTGST_TERRITORIES.includes(code); }
 
 // ========== DATA STORE ==========
 let outwardSupplies = [];
 let inwardSupplies = [];
-let usageCount = parseInt(localStorage.getItem('gstUsageCount') || '0');
+let usageCount = parseInt(localStorage.getItem('gstUsageCount') || '0', 10);
 let isUnlimited = localStorage.getItem('gstUnlimited') === 'true';
+
+const RS = '\u20B9'; // ₹
+const INF = '\u221E'; // ∞
 
 // ========== INIT ==========
 function init() {
+  populateStateDropdowns();
   populateItemDropdowns();
   updateUsageUI();
   setupTabs();
   setupLocationListener();
-  if (isUnlimited) document.getElementById('usageCount').textContent = '&#8734;';
+}
+
+function buildStateOptions(includePlaceholder, placeholderText) {
+  let html = includePlaceholder ? `<option value=""> ${placeholderText} </option>` : '';
+  html += '<optgroup label="States">';
+  STATES_LIST.forEach(c => { html += `<option value="${c}">${STATE_NAMES[c]}</option>`; });
+  html += '</optgroup><optgroup label="Union Territories">';
+  UT_LIST.forEach(c => { html += `<option value="${c}">${STATE_NAMES[c]}</option>`; });
+  html += '</optgroup>';
+  return html;
+}
+
+function populateStateDropdowns() {
+  document.getElementById('supplierState').innerHTML = buildStateOptions(true, 'Select Supplier State / UT');
+  document.getElementById('outwardPOS').innerHTML = buildStateOptions(true, 'Place of supply');
+  document.getElementById('inwardPOS').innerHTML = buildStateOptions(true, 'Place of supply');
 }
 
 function populateItemDropdowns() {
   const sel1 = document.getElementById('outwardItem');
   const sel2 = document.getElementById('inwardItem');
-  sel1.innerHTML = '<option value="">— Select item —</option>';
-  sel2.innerHTML = '<option value="">— Select item —</option>';
+  sel1.innerHTML = '<option value=""> Select item </option>';
+  sel2.innerHTML = '<option value=""> Select item </option>';
   const cats = { 'goods':'GOODS','service':'SERVICES' };
   for (const [cat, label] of Object.entries(cats)) {
     const grp1 = document.createElement('optgroup');
@@ -514,8 +500,7 @@ function populateItemDropdowns() {
       const opt1 = document.createElement('option'); opt1.value = key;
       opt1.textContent = `${item.name} (${item.hsn}) - ${item.gst}% GST`;
       grp1.appendChild(opt1);
-      const opt2 = opt1.cloneNode(true);
-      grp2.appendChild(opt2);
+      grp2.appendChild(opt1.cloneNode(true));
     }
     sel1.appendChild(grp1);
     sel2.appendChild(grp2);
@@ -534,26 +519,21 @@ function setupTabs() {
 }
 
 function setupLocationListener() {
-  document.getElementById('supplyState').addEventListener('change', function() {
+  document.getElementById('supplierState').addEventListener('change', function() {
     const code = this.value;
-    const label = document.getElementById('taxTypeLabel');
-    if (!code) { label.textContent = 'Select a location to see applicable tax type.'; return; }
+    const label = document.getElementById('supplierLabel');
+    if (!code) { label.textContent = "Select the supplier's registered location."; return; }
     const name = STATE_NAMES[code] || code;
-    if (code === SUPPLIER_STATE) {
-      if (isUT(code)) {
-        label.innerHTML = `<span style="color:#b388ff">&#9679; Same UT: CGST + UTGST applicable (split equally)</span>`;
-      } else {
-        label.innerHTML = `<span style="color:#00e676">&#9679; Same State (${name}): CGST + SGST applicable (split equally)</span>`;
-      }
-    } else {
-      label.innerHTML = `<span style="color:#40c4ff">&#9679; Different State/UT: IGST applicable (full rate)</span>`;
-    }
+    const taxNote = leviesUTGST(code)
+      ? 'Intra-state sales here use CGST + UTGST.'
+      : 'Intra-state sales here use CGST + SGST.';
+    label.innerHTML = `<span style="color:#ffd200">&#9679; Supplier registered in ${name} (${code}). ${taxNote}</span>`;
   });
 }
 
 function updateUsageUI() {
   const remaining = Math.max(0, 5 - usageCount);
-  document.getElementById('usageCount').textContent = isUnlimited ? '&#8734;' : remaining;
+  document.getElementById('usageCount').textContent = isUnlimited ? INF : remaining;
 }
 
 function checkUsageLimit() {
@@ -565,55 +545,85 @@ function checkUsageLimit() {
   return true;
 }
 
+// Determine tax type for a single supply line
+function determineTaxType(supplierCode, posCode) {
+  // Intra-state if supplier location and place of supply are the same state/UT
+  if (supplierCode === posCode) {
+    return leviesUTGST(posCode) ? 'intra-ut' : 'intra-state';
+  }
+  return 'inter';
+}
+
 // ========== OUTWARD SUPPLIES ==========
 window.addOutward = function() {
   if (!checkUsageLimit()) return;
+  const supplier = document.getElementById('supplierState').value;
+  if (!supplier) { showToast("Please select the Supplier Location (Place of Registration) first.", 'error'); return; }
   const itemKey = document.getElementById('outwardItem').value;
-  const qty = parseInt(document.getElementById('outwardQty').value) || 1;
+  const pos = document.getElementById('outwardPOS').value;
+  const qty = parseInt(document.getElementById('outwardQty').value, 10) || 1;
   const rate = parseFloat(document.getElementById('outwardRate').value) || 0;
-  if (!itemKey || rate <= 0) { showToast('Please select an item and enter a valid rate.', 'error'); return; }
+  if (!itemKey) { showToast('Please select an item.', 'error'); return; }
+  if (!pos) { showToast('Please select the place of supply for this item.', 'error'); return; }
+  if (rate <= 0) { showToast('Please enter a valid rate.', 'error'); return; }
   const item = GST_RATES[itemKey];
-  outwardSupplies.push({ key: itemKey, name: item.name, hsn: item.hsn, gst: item.gst, qty, rate, taxable: qty * rate });
+  outwardSupplies.push({ key: itemKey, name: item.name, hsn: item.hsn, gst: item.gst, qty, rate, taxable: qty * rate, pos });
   renderOutward();
   document.getElementById('outwardQty').value = 1;
   document.getElementById('outwardRate').value = '';
   showToast(`${item.name} added to outward supplies.`, 'success');
 };
 
-function renderOutward() {
-  const tbody = document.getElementById('outwardBody');
-  if (outwardSupplies.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">No outward supplies added yet.</td></tr>';
-    document.getElementById('outwardTotal').textContent = '₹ 0.00';
+function taxTypeTag(type) {
+  if (type === 'inter') return '<span class="tax-tag tag-inter">IGST</span>';
+  if (type === 'intra-ut') return '<span class="tax-tag tag-intra">CGST+UTGST</span>';
+  return '<span class="tax-tag tag-intra">CGST+SGST</span>';
+}
+
+function renderSupplyTable(list, bodyId, totalId, totalColor, removeFn) {
+  const tbody = document.getElementById(bodyId);
+  const supplier = document.getElementById('supplierState').value;
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty-msg">No supplies added yet.</td></tr>';
+    document.getElementById(totalId).innerHTML = RS + ' 0.00';
     return;
   }
   let total = 0;
-  tbody.innerHTML = outwardSupplies.map((s, i) => {
+  tbody.innerHTML = list.map((s, i) => {
     total += s.taxable;
+    const type = supplier ? determineTaxType(supplier, s.pos) : 'inter';
     return `<tr>
-      <td>${s.name}</td><td>${s.hsn}</td><td>${s.qty}</td>
-      <td>₹${s.rate.toFixed(2)}</td><td>₹${s.taxable.toFixed(2)}</td>
+      <td>${s.name}</td><td>${s.hsn}</td>
+      <td>${STATE_NAMES[s.pos] || s.pos}</td>
+      <td>${s.qty}</td>
+      <td>${RS}${s.rate.toFixed(2)}</td><td>${RS}${s.taxable.toFixed(2)}</td>
       <td>${s.gst}%</td>
-      <td><button class="remove-btn" onclick="removeOutward(${i})">&times;</button></td>
+      <td>${supplier ? taxTypeTag(type) : '<span style="color:#556677;font-size:11px">set supplier</span>'}</td>
+      <td><button class="remove-btn" onclick="${removeFn}(${i})">&times;</button></td>
     </tr>`;
   }).join('');
-  document.getElementById('outwardTotal').textContent = '₹' + total.toFixed(2);
+  document.getElementById(totalId).innerHTML = RS + ' ' + total.toFixed(2);
 }
 
-window.removeOutward = function(i) {
-  outwardSupplies.splice(i, 1);
-  renderOutward();
-};
+function renderOutward() {
+  renderSupplyTable(outwardSupplies, 'outwardBody', 'outwardTotal', '#fff', 'removeOutward');
+}
+window.removeOutward = function(i) { outwardSupplies.splice(i, 1); renderOutward(); };
 
 // ========== INWARD SUPPLIES ==========
 window.addInward = function() {
   if (!checkUsageLimit()) return;
+  const supplier = document.getElementById('supplierState').value;
+  if (!supplier) { showToast("Please select the Supplier Location (Place of Registration) first.", 'error'); return; }
   const itemKey = document.getElementById('inwardItem').value;
-  const qty = parseInt(document.getElementById('inwardQty').value) || 1;
+  const pos = document.getElementById('inwardPOS').value;
+  const qty = parseInt(document.getElementById('inwardQty').value, 10) || 1;
   const rate = parseFloat(document.getElementById('inwardRate').value) || 0;
-  if (!itemKey || rate <= 0) { showToast('Please select an item and enter a valid rate.', 'error'); return; }
+  if (!itemKey) { showToast('Please select an item.', 'error'); return; }
+  if (!pos) { showToast('Please select the place of supply for this item.', 'error'); return; }
+  if (rate <= 0) { showToast('Please enter a valid rate.', 'error'); return; }
   const item = GST_RATES[itemKey];
-  inwardSupplies.push({ key: itemKey, name: item.name, hsn: item.hsn, gst: item.gst, qty, rate, taxable: qty * rate });
+  inwardSupplies.push({ key: itemKey, name: item.name, hsn: item.hsn, gst: item.gst, qty, rate, taxable: qty * rate, pos });
   renderInward();
   document.getElementById('inwardQty').value = 1;
   document.getElementById('inwardRate').value = '';
@@ -621,117 +631,86 @@ window.addInward = function() {
 };
 
 function renderInward() {
-  const tbody = document.getElementById('inwardBody');
-  if (inwardSupplies.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">No inward supplies added yet.</td></tr>';
-    document.getElementById('inwardTotal').textContent = '₹ 0.00';
-    return;
-  }
-  let total = 0;
-  tbody.innerHTML = inwardSupplies.map((s, i) => {
-    total += s.taxable;
-    return `<tr>
-      <td>${s.name}</td><td>${s.hsn}</td><td>${s.qty}</td>
-      <td>₹${s.rate.toFixed(2)}</td><td>₹${s.taxable.toFixed(2)}</td>
-      <td>${s.gst}%</td>
-      <td><button class="remove-btn" onclick="removeInward(${i})">&times;</button></td>
-    </tr>`;
-  }).join('');
-  document.getElementById('inwardTotal').textContent = '₹' + total.toFixed(2);
+  renderSupplyTable(inwardSupplies, 'inwardBody', 'inwardTotal', '#00e676', 'removeInward');
 }
+window.removeInward = function(i) { inwardSupplies.splice(i, 1); renderInward(); };
 
-window.removeInward = function(i) {
-  inwardSupplies.splice(i, 1);
-  renderInward();
-};
+// Re-render tables when supplier changes (tax-type tags depend on it)
+document.addEventListener('change', function(e){
+  if (e.target && e.target.id === 'supplierState') { renderOutward(); renderInward(); }
+});
 
-// ========== GST CALCULATION ENGINE ==========
+// ========== GST CALCULATION ENGINE (head-wise, per-line place of supply) ==========
 window.calculateGST = function() {
   if (!checkUsageLimit()) return;
-  const stateCode = document.getElementById('supplyState').value;
-  if (!stateCode) { showToast('Please select a location of supply first.', 'error'); return; }
+  const supplier = document.getElementById('supplierState').value;
+  if (!supplier) { showToast('Please select the Supplier Location (Place of Registration) first.', 'error'); return; }
   if (outwardSupplies.length === 0) { showToast('Please add at least one outward supply item.', 'error'); return; }
 
-  // Increment usage
   if (!isUnlimited) {
     usageCount++;
     localStorage.setItem('gstUsageCount', usageCount.toString());
     updateUsageUI();
   }
 
-  // Determine tax type
-  const sameState = stateCode === SUPPLIER_STATE;
-  const isUnionTerritory = isUT(stateCode);
-  let taxTypeLabel, cgstLabel, sgstLabel;
-  if (sameState) {
-    if (isUnionTerritory) {
-      taxTypeLabel = 'CGST + UTGST';
-      cgstLabel = 'CGST (50%)';
-      sgstLabel = 'UTGST (50%)';
-    } else {
-      taxTypeLabel = 'CGST + SGST';
-      cgstLabel = 'CGST (50%)';
-      sgstLabel = 'SGST (50%)';
-    }
-  } else {
-    taxTypeLabel = 'IGST';
-    cgstLabel = 'IGST (100%)';
-    sgstLabel = '';
-  }
-
-  // Calculate by GST rate buckets
-  const rateBuckets = {};
+  // ----- OUTPUT TAX (liability) computed per line based on its place of supply -----
+  let outCGST = 0, outSGST = 0, outUTGST = 0, outIGST = 0;
+  const lineDetails = [];
   outwardSupplies.forEach(s => {
-    if (!rateBuckets[s.gst]) rateBuckets[s.gst] = 0;
-    rateBuckets[s.gst] += s.taxable;
+    const type = determineTaxType(supplier, s.pos);
+    const gstAmt = s.taxable * s.gst / 100;
+    let c = 0, sg = 0, ut = 0, ig = 0;
+    if (type === 'inter') { ig = gstAmt; outIGST += gstAmt; }
+    else if (type === 'intra-ut') { c = gstAmt/2; ut = gstAmt/2; outCGST += c; outUTGST += ut; }
+    else { c = gstAmt/2; sg = gstAmt/2; outCGST += c; outSGST += sg; }
+    lineDetails.push({ name: s.name, gst: s.gst, taxable: s.taxable, type, total: gstAmt, cgst: c, sgst: sg, utgst: ut, igst: ig });
   });
 
-  // Calculate tax
-  let totalGst = 0;
-  let totalCgst = 0, totalSgst = 0, totalIgst = 0;
-  const breakdown = [];
-
-  for (const [rateStr, taxable] of Object.entries(rateBuckets)) {
-    const rate = parseFloat(rateStr);
-    let gstAmt = taxable * rate / 100;
-    totalGst += gstAmt;
-    if (sameState) {
-      const half = gstAmt / 2;
-      totalCgst += half;
-      totalSgst += half;
-      breakdown.push({
-        rate, taxable, total: gstAmt,
-        label: `${rate}% GST`,
-        cgst: half, sgst: half, igst: 0
-      });
-    } else {
-      totalIgst += gstAmt;
-      breakdown.push({
-        rate, taxable, total: gstAmt,
-        cgst: 0, sgst: 0, igst: gstAmt
-      });
-    }
-  }
-
-  // ITC from inward
-  const itcByRate = {};
+  // ----- INPUT TAX CREDIT (ITC) computed per line based on its place of supply -----
+  let itcCGST = 0, itcSGST = 0, itcUTGST = 0, itcIGST = 0;
   inwardSupplies.forEach(s => {
-    if (!itcByRate[s.gst]) itcByRate[s.gst] = 0;
-    const tax = s.taxable * s.gst / 100;
-    itcByRate[s.gst] += (sameState ? tax : tax);
+    const type = determineTaxType(supplier, s.pos);
+    const gstAmt = s.taxable * s.gst / 100;
+    if (type === 'inter') itcIGST += gstAmt;
+    else if (type === 'intra-ut') { itcCGST += gstAmt/2; itcUTGST += gstAmt/2; }
+    else { itcCGST += gstAmt/2; itcSGST += gstAmt/2; }
   });
-  let totalItc = Object.values(itcByRate).reduce((a, b) => a + b, 0);
 
-  // Net liability
-  const netLiability = totalGst - totalItc;
+  // ----- HEAD-WISE SET-OFF as per GST Act order of utilisation -----
+  // IGST credit: first against IGST output, then CGST, then SGST/UTGST.
+  // CGST credit: against CGST then IGST. SGST credit: against SGST then IGST.
+  // UTGST credit: against UTGST then IGST. (CGST/SGST/UTGST not cross-utilised among each other.)
+  let liabIGST = outIGST, liabCGST = outCGST, liabSGST = outSGST, liabUTGST = outUTGST;
+  let crIGST = itcIGST, crCGST = itcCGST, crSGST = itcSGST, crUTGST = itcUTGST;
 
-  // Render results
+  // 1) IGST credit -> IGST
+  let use = Math.min(crIGST, liabIGST); liabIGST -= use; crIGST -= use;
+  // 2) CGST credit -> CGST
+  use = Math.min(crCGST, liabCGST); liabCGST -= use; crCGST -= use;
+  // 3) SGST credit -> SGST
+  use = Math.min(crSGST, liabSGST); liabSGST -= use; crSGST -= use;
+  // 4) UTGST credit -> UTGST
+  use = Math.min(crUTGST, liabUTGST); liabUTGST -= use; crUTGST -= use;
+  // 5) Remaining IGST credit -> CGST, then SGST, then UTGST
+  use = Math.min(crIGST, liabCGST); liabCGST -= use; crIGST -= use;
+  use = Math.min(crIGST, liabSGST); liabSGST -= use; crIGST -= use;
+  use = Math.min(crIGST, liabUTGST); liabUTGST -= use; crIGST -= use;
+  // 6) Remaining CGST credit -> IGST ; SGST credit -> IGST ; UTGST credit -> IGST
+  use = Math.min(crCGST, liabIGST); liabIGST -= use; crCGST -= use;
+  use = Math.min(crSGST, liabIGST); liabIGST -= use; crSGST -= use;
+  use = Math.min(crUTGST, liabIGST); liabIGST -= use; crUTGST -= use;
+
+  const totalOutput = outCGST + outSGST + outUTGST + outIGST;
+  const totalITC = itcCGST + itcSGST + itcUTGST + itcIGST;
+  const netPayable = liabIGST + liabCGST + liabSGST + liabUTGST;
+  const creditCarryForward = crIGST + crCGST + crSGST + crUTGST;
+
   renderResults({
-    stateCode, stateName: STATE_NAMES[stateCode] || stateCode,
-    sameState, isUnionTerritory, taxTypeLabel,
-    cgstLabel, sgstLabel,
-    totalGst, totalCgst, totalSgst, totalIgst,
-    totalItc, netLiability, breakdown, itcByRate
+    supplier, supplierName: STATE_NAMES[supplier] || supplier,
+    outCGST, outSGST, outUTGST, outIGST, totalOutput,
+    itcCGST, itcSGST, itcUTGST, itcIGST, totalITC,
+    payIGST: liabIGST, payCGST: liabCGST, paySGST: liabSGST, payUTGST: liabUTGST,
+    netPayable, creditCarryForward, lineDetails
   });
 
   document.getElementById('resultCard').classList.add('show');
@@ -741,86 +720,89 @@ window.calculateGST = function() {
     showToast('You have used all 5 free calculations. Login for unlimited access.', 'warning');
     setTimeout(() => document.getElementById('loginModal').classList.add('show'), 1000);
   } else if (!isUnlimited) {
-    showToast(`Calculation complete! (${usageCount}/5 free uses remaining)`, 'success');
+    showToast(`Calculation complete! (${Math.max(0,5-usageCount)}/5 free uses remaining)`, 'success');
   } else {
     showToast('Calculation complete! (Unlimited mode)', 'success');
   }
 };
 
-function renderResults(data) {
-  const { stateCode, stateName, sameState, isUnionTerritory, taxTypeLabel, cgstLabel, sgstLabel,
-          totalGst, totalCgst, totalSgst, totalIgst, totalItc, netLiability, breakdown, itcByRate } = data;
+function fmt(n){ return RS + ' ' + (n||0).toFixed(2); }
 
-  // GST Breakdown tiles
-  const bdContainer = document.getElementById('gstBreakdown');
-  bdContainer.innerHTML = `
-    <div class="gst-tile">
-      <div class="tax-type">${taxTypeLabel}</div>
-      <div class="tax-val gold">${totalGst.toFixed(2)}</div>
-    </div>
-    <div class="gst-tile">
-      <div class="tax-type">${sameState ? (isUnionTerritory ? 'CGST' : 'CGST') : 'IGST'}</div>
-      <div class="tax-val blue">${(sameState ? totalCgst : totalIgst).toFixed(2)}</div>
-    </div>
-    <div class="gst-tile">
-      <div class="tax-type">${sameState && sgstLabel ? sgstLabel.replace(' (50%)','') : '—'}</div>
-      <div class="tax-val ${sameState ? 'purple' : 'gray'}">${sameState ? totalSgst.toFixed(2) : '—'}</div>
-    </div>
-    <div class="gst-tile">
-      <div class="tax-type">ITC Available</div>
-      <div class="tax-val green">${totalItc.toFixed(2)}</div>
-    </div>
+function renderResults(d) {
+  const utLevy = leviesUTGST(d.supplier);
+  document.getElementById('supplierSummary').innerHTML =
+    `Supplier registered in <strong style="color:#ffd200">${d.supplierName} (${d.supplier})</strong>. Intra-state liability head: ${utLevy ? 'CGST + UTGST' : 'CGST + SGST'}. Inter-state: IGST.`;
+
+  // Output tax breakdown tiles
+  const sgstUtLabel = utLevy ? 'Output UTGST' : 'Output SGST';
+  const sgstUtVal = utLevy ? d.outUTGST : d.outSGST;
+  document.getElementById('gstBreakdown').innerHTML = `
+    <div class="gst-tile"><div class="tax-type">Total Output Tax</div><div class="tax-val gold">${fmt(d.totalOutput)}</div></div>
+    <div class="gst-tile"><div class="tax-type">Output CGST</div><div class="tax-val blue">${fmt(d.outCGST)}</div></div>
+    <div class="gst-tile"><div class="tax-type">${sgstUtLabel}</div><div class="tax-val purple">${fmt(sgstUtVal)}</div></div>
+    <div class="gst-tile"><div class="tax-type">Output IGST</div><div class="tax-val orange">${fmt(d.outIGST)}</div></div>
+    <div class="gst-tile"><div class="tax-type">Total ITC</div><div class="tax-val green">${fmt(d.totalITC)}</div></div>
   `;
 
-  // Detailed result grid
-  const grid = document.getElementById('resultGrid');
+  // Per-line details + ITC + net payable head-wise
   let gridHTML = '';
-  breakdown.forEach(b => {
+  d.lineDetails.forEach(b => {
+    const sub = b.type === 'inter'
+      ? `IGST: ${fmt(b.igst)}`
+      : (b.type === 'intra-ut'
+          ? `CGST: ${fmt(b.cgst)} | UTGST: ${fmt(b.utgst)}`
+          : `CGST: ${fmt(b.cgst)} | SGST: ${fmt(b.sgst)}`);
     gridHTML += `
       <div class="result-item">
-        <div class="label">${b.rate}% GST on ₹${b.taxable.toFixed(2)}</div>
-        <div class="value gold">₹${b.total.toFixed(2)}</div>
-        <div style="font-size:11px;color:#556677;margin-top:2px">
-          ${sameState ? `CGST: ₹${b.cgst.toFixed(2)} | SGST: ₹${b.sgst.toFixed(2)}` : `IGST: ₹${b.igst.toFixed(2)}`}
-        </div>
-      </div>
-    `;
+        <div class="label">${b.gst}% GST on ${fmt(b.taxable)}</div>
+        <div class="value gold">${fmt(b.total)}</div>
+        <div style="font-size:11px;color:#556677;margin-top:2px">${sub}</div>
+      </div>`;
   });
 
-  // ITC details
+  // ITC head-wise
   let itcHtml = '';
-  for (const [rate, amt] of Object.entries(itcByRate)) {
-    if (amt > 0) {
-      itcHtml += `<div style="font-size:12px;color:#7788aa">ITC @ ${rate}%: ₹${amt.toFixed(2)}</div>`;
-    }
-  }
+  if (d.itcIGST > 0) itcHtml += `<div style="font-size:12px;color:#7788aa">ITC (IGST): ${fmt(d.itcIGST)}</div>`;
+  if (d.itcCGST > 0) itcHtml += `<div style="font-size:12px;color:#7788aa">ITC (CGST): ${fmt(d.itcCGST)}</div>`;
+  if (d.itcSGST > 0) itcHtml += `<div style="font-size:12px;color:#7788aa">ITC (SGST): ${fmt(d.itcSGST)}</div>`;
+  if (d.itcUTGST > 0) itcHtml += `<div style="font-size:12px;color:#7788aa">ITC (UTGST): ${fmt(d.itcUTGST)}</div>`;
+  if (!itcHtml) itcHtml = '<div style="font-size:12px;color:#556677">No ITC added.</div>';
 
-  grid.innerHTML = gridHTML + `
-    <div class="result-item">
-      <div class="label">Total GST</div>
-      <div class="value gold">₹${totalGst.toFixed(2)}</div>
+  // Net payable head-wise
+  let payHtml = '';
+  payHtml += `<div style="font-size:12px;color:#8899aa">Payable IGST: <strong style="color:#ffab40">${fmt(d.payIGST)}</strong></div>`;
+  payHtml += `<div style="font-size:12px;color:#8899aa">Payable CGST: <strong style="color:#40c4ff">${fmt(d.payCGST)}</strong></div>`;
+  payHtml += `<div style="font-size:12px;color:#8899aa">Payable SGST: <strong style="color:#b388ff">${fmt(d.paySGST)}</strong></div>`;
+  if (d.payUTGST > 0 || utLevy) payHtml += `<div style="font-size:12px;color:#8899aa">Payable UTGST: <strong style="color:#b388ff">${fmt(d.payUTGST)}</strong></div>`;
+
+  document.getElementById('resultGrid').innerHTML = gridHTML + `
+    <div class="result-item"><div class="label">Total Output Tax</div><div class="value gold">${fmt(d.totalOutput)}</div></div>
+    <div class="result-item"><div class="label">Total ITC Utilised/Available</div><div class="value green">${fmt(d.totalITC)}</div></div>
+    <div class="result-item" style="grid-column:1/-1;text-align:left">
+      <div class="label" style="text-align:center;margin-bottom:8px">Input Tax Credit (head-wise)</div>
+      ${itcHtml}
     </div>
-    <div class="result-item">
-      <div class="label">Total ITC</div>
-      <div class="value green">₹${totalItc.toFixed(2)}</div>
-    </div>
-    <div class="result-item" style="grid-column:1/-1">
-      <div class="label">Location: ${stateName} (${stateCode}) — ${taxTypeLabel}</div>
-      <div style="margin-top:5px">${itcHtml}</div>
+    <div class="result-item" style="grid-column:1/-1;text-align:left">
+      <div class="label" style="text-align:center;margin-bottom:8px">Net Tax Payable (head-wise, after set-off)</div>
+      ${payHtml}
+      ${d.creditCarryForward > 0 ? `<div style="font-size:12px;color:#00e676;margin-top:6px">Excess ITC carried forward: ${fmt(d.creditCarryForward)}</div>` : ''}
     </div>
   `;
 
-  document.getElementById('netLiabilityVal').textContent = '₹' + netLiability.toFixed(2);
-  const netRow = document.getElementById('netLiability');
-  if (netLiability < 0) {
-    netRow.querySelector('.value').style.color = '#00e676';
-    netRow.querySelector('.value').textContent = '(Refund) ₹' + Math.abs(netLiability).toFixed(2);
-  } else if (netLiability === 0) {
-    netRow.querySelector('.value').style.color = '#ffd200';
-    netRow.querySelector('.value').textContent = '₹ 0.00';
+  const valEl = document.getElementById('netLiabilityVal');
+  const labelEl = document.querySelector('#netLiability .label');
+  if (d.netPayable <= 0.005 && d.creditCarryForward > 0.005) {
+    labelEl.textContent = 'Net GST Payable (Nil)';
+    valEl.style.color = '#00e676';
+    valEl.textContent = fmt(0) + '  (ITC c/f ' + d.creditCarryForward.toFixed(2) + ')';
+  } else if (d.netPayable <= 0.005) {
+    labelEl.textContent = 'Net GST Payable';
+    valEl.style.color = '#ffd200';
+    valEl.textContent = fmt(0);
   } else {
-    netRow.querySelector('.value').style.color = '#ff5252';
-    netRow.querySelector('.value').textContent = '₹' + netLiability.toFixed(2);
+    labelEl.textContent = 'Net GST Payable';
+    valEl.style.color = '#ff5252';
+    valEl.textContent = fmt(d.netPayable);
   }
 }
 
@@ -832,7 +814,7 @@ window.handleLogin = function() {
     isUnlimited = true;
     localStorage.setItem('gstUnlimited', 'true');
     document.getElementById('loginModal').classList.remove('show');
-    document.getElementById('usageCount').textContent = '&#8734;';
+    document.getElementById('usageCount').textContent = INF;
     showToast('Unlimited access granted! Welcome, Aadi.', 'success');
   } else {
     document.getElementById('loginError').style.display = 'block';
@@ -844,7 +826,6 @@ window.closeLogin = function() {
   document.getElementById('loginError').style.display = 'none';
 };
 
-// Close modal on overlay click
 document.getElementById('loginModal').addEventListener('click', function(e) {
   if (e.target === this) closeLogin();
 });
@@ -858,54 +839,12 @@ function showToast(msg, type = 'success') {
   t._timer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// ========== ANTI-COPY PROTECTION BY GUNJAN ==========
+// ========== PRINT WATERMARK BY GUNJAN ==========
 (function gunjanProtection() {
-  // Watermark all printed pages
   const style = document.createElement('style');
   style.textContent = `@media print{body::after{content:'Made by Gunjan - GSTPro Calculator';position:fixed;bottom:0;left:0;width:100%;text-align:center;font-size:10px;color:#999;padding:5px;background:#fff}}`;
   document.head.appendChild(style);
-
-  // Disable right-click context menu
-  document.addEventListener('contextmenu', e => e.preventDefault());
-
-  // Disable common copy shortcuts
-  document.addEventListener('keydown', e => {
-    if ((e.ctrlKey || e.metaKey) && ['c','u','s','p','v'].includes(e.key.toLowerCase())) {
-      e.preventDefault();
-      showToast('Content is protected by Gunjan.', 'warning');
-    }
-    if (e.key === 'F12') { e.preventDefault(); showToast('DevTools restricted by Gunjan.', 'warning'); }
-  });
-
-  // Override console
-  try {
-    Object.defineProperty(console, '_orig', { value: console.log });
-    // Detect DevTools
-    setInterval(() => {
-      const start = performance.now();
-      debugger;
-      const end = performance.now();
-      if (end - start > 100) {
-        document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0a0a1a;color:#ffd200;font-family:sans-serif;font-size:24px;text-align:center;padding:20px"><div><h1>&#128274; Protected by Gunjan</h1><p style="font-size:14px;color:#7788aa;margin-top:10px">This application is protected. Please close DevTools.</p></div></div>';
-      }
-    }, 2000);
-  } catch(e) {}
-
-  // Tamper check on localStorage for unlimited
-  const origSetItem = Storage.prototype.setItem;
-  Storage.prototype.setItem = function(key, value) {
-    if (key === 'gstUnlimited' && value === 'true' && !document.getElementById('loginUser')?.value) {
-      // Check if actual login happened
-      const user = document.getElementById('loginUser')?.value;
-      if (user !== 'Aadi') {
-        showToast('Unauthorized modification detected! Protected by Gunjan.', 'error');
-        return;
-      }
-    }
-    origSetItem.call(this, key, value);
-  };
-
-  console.log('%c Made by Gunjan %c GSTPro Calculator v2.0 ',
+  console.log('%c Made by Gunjan %c GSTPro Calculator v3.0 ',
     'background:#f7971e;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px 0 0 4px;font-size:14px',
     'background:#0a0a1a;color:#ffd200;padding:4px 8px;border-radius:0 4px 4px 0;font-size:14px');
 })();
