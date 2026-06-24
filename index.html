@@ -168,7 +168,7 @@ select option{background:#1a1a3a;color:#e0e0e0}
 <div class="ui-overlay">
   <header>
     <div class="logo">GST<span>Pro</span> <small>Calculator&nbsp;India</small></div>
-    <div class="usage-badge">&#9889; Free Uses: <span id="usageCount">5</span> / 5</div>
+    <div class="usage-badge">&#9889; Offline Edition</div>
   </header>
 
   <section class="hero">
@@ -196,6 +196,7 @@ select option{background:#1a1a3a;color:#e0e0e0}
   <div class="tabs">
     <button class="tab active" data-tab="outward">Outward Supplies</button>
     <button class="tab" data-tab="inward">Inward Supplies</button>
+    <button class="tab" data-tab="bulk">Bulk Entry</button>
     <button class="tab" data-tab="calculator">Calculator</button>
   </div>
 
@@ -246,6 +247,28 @@ select option{background:#1a1a3a;color:#e0e0e0}
     </div>
   </div>
 
+  <div id="tab-bulk" class="tab-content" style="display:none">
+    <div class="card" id="bulkCard">
+      <h3><span class="icon">&#128203;</span> Bulk Quick Entry</h3>
+      <p>Paste several transactions at once &mdash; one per numbered line, like in a question sheet (e.g. "1. Supplied refrigerators worth &#8377;15,00,000 to a dealer in Kerala"). Click <strong>Parse</strong>, then check &amp; correct each row before adding &mdash; auto-detection reads amounts, states &amp; keywords only; it cannot apply legal judgment (composition-dealer exemption, blocked ITC u/s 17(5), discounts, related-party valuation, advance-receipt timing, etc.), so always verify.</p>
+      <textarea id="bulkPasteArea" maxlength="20000" rows="7" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;color:#e0e0e0;padding:12px;font-family:'Inter',sans-serif;font-size:13px;margin-bottom:10px" placeholder="1. Advance received &#8377;2,00,000 from Anurag of Karnataka for business support services...
+2. Supplied refrigerators worth &#8377;15,00,000 to a dealer in Kerala...
+3. Purchased a SUV motor vehicle for official use: &#8377;10,00,000 + 18% IGST..."></textarea>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-sm" onclick="parseBulkPaste()">&#10003; Parse Entries</button>
+        <button class="btn btn-secondary btn-sm" onclick="clearBulkPaste()">Clear</button>
+      </div>
+      <div id="bulkPreviewWrap" style="display:none;margin-top:16px">
+        <div style="font-size:12px;color:#7788aa;margin-bottom:8px">Review &amp; fix direction / item / place of supply / amount, then add.</div>
+        <table class="invoice-table" id="bulkPreviewTable">
+          <thead><tr><th>Original text</th><th>Direction</th><th>Item</th><th>Place of Supply</th><th>Qty</th><th>Rate (&#8377;)</th><th>ITC</th><th></th></tr></thead>
+          <tbody id="bulkPreviewBody"></tbody>
+        </table>
+        <div style="margin-top:10px"><button class="btn btn-sm" onclick="addAllBulk()">&#10003; Add All Confirmed Rows</button></div>
+      </div>
+    </div>
+  </div>
+
   <div id="tab-calculator" class="tab-content" style="display:none">
     <div class="card" id="calcCard">
       <h3><span class="icon">&#128290;</span> Calculate GST</h3>
@@ -293,25 +316,6 @@ select option{background:#1a1a3a;color:#e0e0e0}
   </div>
 </div>
 
-<!-- Login Modal -->
-<div class="modal-overlay" id="loginModal">
-  <div class="modal">
-    <button class="close-modal" onclick="closeLogin()">&times;</button>
-    <h2>&#128274; Unlimited Access</h2>
-    <p>You have used all 5 free calculations. Enter credentials to continue.</p>
-    <div class="form-group">
-      <label>Username</label>
-      <input type="text" id="loginUser" placeholder="Enter username">
-    </div>
-    <div class="form-group">
-      <label>Password</label>
-      <input type="password" id="loginPass" placeholder="Enter password">
-    </div>
-    <div class="error-msg" id="loginError">Invalid credentials. Please try again.</div>
-    <button class="btn" onclick="handleLogin()">Unlock Unlimited</button>
-  </div>
-</div>
-
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -325,7 +329,16 @@ select option{background:#1a1a3a;color:#e0e0e0}
 </script>
 
 <script type="module">
-import * as THREE from 'three';
+(async () => {
+let THREE;
+try {
+  THREE = await import('three');
+} catch (err) {
+  // No internet / CDN unreachable: skip the decorative 3D background.
+  // The calculator itself makes no network calls and is unaffected.
+  console.warn('3D background skipped (offline or CDN unreachable). Calculator still works fully.');
+  return;
+}
 const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -365,8 +378,11 @@ const sparkles = new THREE.Points(spGeo, spMat); scene.add(sparkles);
 camera.position.z = 5; camera.position.y = 0.3;
 let mouseX = 0, mouseY = 0;
 document.addEventListener('mousemove', (e) => { mouseX = (e.clientX / window.innerWidth - 0.5) * 2; mouseY = (e.clientY / window.innerHeight - 0.5) * 2; });
+let tabVisible = true;
+document.addEventListener('visibilitychange', () => { tabVisible = document.visibilityState === 'visible'; }); // pause GPU/CPU work in background tabs
 function animate() {
   requestAnimationFrame(animate);
+  if (!tabVisible) return; // skip render entirely while hidden -- avoids draining battery/CPU in the background
   knot.rotation.x += 0.003; knot.rotation.y += 0.005; wireKnot.rotation.x += 0.003; wireKnot.rotation.y += 0.005;
   particles.rotation.y += 0.0002; sparkles.rotation.y += 0.0003;
   rings.forEach((r) => { r.mesh.rotation.x += r.rotSpeed.x; r.mesh.rotation.y += r.rotSpeed.y; r.bob += 0.005; r.mesh.position.y += Math.sin(r.bob) * 0.0005; });
@@ -376,6 +392,7 @@ function animate() {
 }
 animate();
 window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+})();
 </script>
 
 <script>
@@ -446,18 +463,14 @@ function leviesUTGST(code) { return UTGST_TERRITORIES.includes(code); }
 // ========== DATA STORE ==========
 let outwardSupplies = [];
 let inwardSupplies = [];
-let usageCount = parseInt(localStorage.getItem('gstUsageCount') || '0', 10);
-let isUnlimited = localStorage.getItem('gstUnlimited') === 'true';
 let lastReport = null; // stores the computed result for export/print
 
 const RS = '\u20B9';
-const INF = '\u221E';
 
 // ========== INIT ==========
 function init() {
   populateStateDropdowns();
   populateItemDropdowns();
-  updateUsageUI();
   setupTabs();
   setupLocationListener();
   // default tax period = current month
@@ -520,14 +533,9 @@ function setupLocationListener() {
     label.innerHTML = `<span style="color:#ffd200">&#9679; Supplier registered in ${name} (${code}). ${taxNote}</span>`;
   });
 }
-function updateUsageUI() {
-  const remaining = Math.max(0, 5 - usageCount);
-  document.getElementById('usageCount').textContent = isUnlimited ? INF : remaining;
-}
-function checkUsageLimit() {
-  if (isUnlimited) return true;
-  if (usageCount >= 5) { document.getElementById('loginModal').classList.add('show'); return false; }
-  return true;
+// escape any user-typed / pasted free text before it is ever inserted via innerHTML
+function escapeHtml(str){
+  return String(str==null?'':str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 function determineTaxType(supplierCode, posCode) {
   if (supplierCode === posCode) return leviesUTGST(posCode) ? 'intra-ut' : 'intra-state';
@@ -536,7 +544,6 @@ function determineTaxType(supplierCode, posCode) {
 
 // ========== OUTWARD SUPPLIES ==========
 window.addOutward = function() {
-  if (!checkUsageLimit()) return;
   const supplier = document.getElementById('supplierState').value;
   if (!supplier) { showToast("Please select the Supplier Location (Place of Registration) first.", 'error'); return; }
   const itemKey = document.getElementById('outwardItem').value;
@@ -587,7 +594,6 @@ window.removeOutward = function(i) { outwardSupplies.splice(i, 1); renderOutward
 
 // ========== INWARD SUPPLIES ==========
 window.addInward = function() {
-  if (!checkUsageLimit()) return;
   const supplier = document.getElementById('supplierState').value;
   if (!supplier) { showToast("Please select the Supplier Location (Place of Registration) first.", 'error'); return; }
   const itemKey = document.getElementById('inwardItem').value;
@@ -634,22 +640,128 @@ function renderInward() {
 }
 window.removeInward = function(i) { inwardSupplies.splice(i, 1); renderInward(); };
 
+// ========== BULK QUICK ENTRY (heuristic paste parser) ==========
+// Splits pasted text into entries, guesses amount / state / GST% / item / direction
+// from keywords. Nothing here decides legal tax treatment for you (composition
+// dealer exemption, blocked ITC u/s 17(5), discounts, advance timing, related-party
+// valuation, etc.) -- every row must be reviewed in the preview table before adding.
+const OUTWARD_HINTS = ['supplied','supply to','sold','sale to','provided','rendered','received from','advance received','consideration','commissioning services','services to'];
+const INWARD_HINTS = ['purchased','purchase from','bought','procured','payment of','paid to','payment made to'];
+
+function splitBulkEntries(text){
+  const parts = text.split(/\n(?=\s{0,3}\d{1,3}[.)]\s)/g); // new entry at start of a numbered line
+  return parts.map(p => p.replace(/^\s{0,3}\d{1,3}[.)]\s*/, '').trim()).filter(Boolean);
+}
+function guessAmount(text){
+  const m = text.match(/(?:\u20b9|rs\.?|inr)\s?([\d,]{1,15}(?:\.\d{1,2})?)/i); // bounded, no nested quantifiers
+  return m ? (parseFloat(m[1].replace(/,/g,'')) || null) : null;
+}
+function guessGstRate(text){
+  const m = text.match(/(\d{1,2})\s?%/);
+  return m ? parseInt(m[1], 10) : null;
+}
+function guessDirection(text){
+  const t = text.toLowerCase();
+  if (INWARD_HINTS.some(h => t.includes(h))) return 'inward';
+  if (OUTWARD_HINTS.some(h => t.includes(h))) return 'outward';
+  return 'outward';
+}
+function guessState(text){
+  const t = text.toLowerCase();
+  for (const code of Object.keys(STATE_NAMES)) {
+    if (t.includes(STATE_NAMES[code].toLowerCase())) return code;
+  }
+  return '';
+}
+function guessItem(text){
+  const t = text.toLowerCase();
+  for (const [key, item] of Object.entries(GST_RATES)) {
+    const word = item.name.toLowerCase().split(/[^a-z]+/)[0];
+    if (word.length > 2 && t.includes(word)) return key;
+  }
+  return '';
+}
+
+let bulkParsed = [];
+window.clearBulkPaste = function(){
+  document.getElementById('bulkPasteArea').value = '';
+  document.getElementById('bulkPreviewWrap').style.display = 'none';
+  bulkParsed = [];
+};
+window.parseBulkPaste = function(){
+  const raw = document.getElementById('bulkPasteArea').value;
+  if (!raw.trim()) { showToast('Paste some transaction text first.', 'error'); return; }
+  const entries = splitBulkEntries(raw).slice(0, 200); // cap so a huge paste can't freeze the page
+  bulkParsed = entries.map(e => ({
+    raw: e, direction: guessDirection(e), itemKey: guessItem(e),
+    pos: guessState(e), amount: guessAmount(e), gst: guessGstRate(e),
+    qty: 1, itc: 'eligible'
+  }));
+  renderBulkPreview();
+  document.getElementById('bulkPreviewWrap').style.display = 'block';
+  showToast(`${bulkParsed.length} entr${bulkParsed.length===1?'y':'ies'} detected -- review before adding.`, 'success');
+};
+function itemOptionsHtml(selectedKey){
+  let h = '<option value="">-- pick item --</option>';
+  for (const [key, item] of Object.entries(GST_RATES)) {
+    h += `<option value="${key}" ${key===selectedKey?'selected':''}>${item.name} (${item.gst}%)</option>`;
+  }
+  return h;
+}
+function statePickerHtml(selectedCode){
+  let h = '<option value="">-- POS --</option>';
+  [...STATES_LIST, ...UT_LIST].forEach(c => { h += `<option value="${c}" ${c===selectedCode?'selected':''}>${STATE_NAMES[c]}</option>`; });
+  return h;
+}
+function renderBulkPreview(){
+  const body = document.getElementById('bulkPreviewBody');
+  body.innerHTML = bulkParsed.map((r, i) => `
+    <tr>
+      <td style="max-width:200px;font-size:11px;color:#8899aa">${escapeHtml(r.raw.slice(0,140))}${r.raw.length>140?'\u2026':''}</td>
+      <td><select onchange="bulkParsed[${i}].direction=this.value">
+        <option value="outward" ${r.direction==='outward'?'selected':''}>Outward</option>
+        <option value="inward" ${r.direction==='inward'?'selected':''}>Inward</option>
+      </select></td>
+      <td><select onchange="bulkParsed[${i}].itemKey=this.value">${itemOptionsHtml(r.itemKey)}</select></td>
+      <td><select onchange="bulkParsed[${i}].pos=this.value">${statePickerHtml(r.pos)}</select></td>
+      <td><input type="number" value="1" min="1" style="width:55px" onchange="bulkParsed[${i}].qty=parseInt(this.value,10)||1"></td>
+      <td><input type="number" value="${r.amount||0}" min="0" step="0.01" style="width:95px" onchange="bulkParsed[${i}].amount=parseFloat(this.value)||0"></td>
+      <td><select onchange="bulkParsed[${i}].itc=this.value">
+        <option value="eligible">Eligible</option>
+        <option value="ineligible">Blocked</option>
+      </select></td>
+      <td><button class="remove-btn" onclick="bulkParsed.splice(${i},1);renderBulkPreview()">&times;</button></td>
+    </tr>`).join('');
+}
+window.addAllBulk = function(){
+  const supplier = document.getElementById('supplierState').value;
+  if (!supplier) { showToast('Select Supplier Location first.', 'error'); return; }
+  let added = 0, skipped = 0;
+  bulkParsed.forEach(r => {
+    if (!r.itemKey || !r.pos || !r.amount) { skipped++; return; }
+    const item = GST_RATES[r.itemKey];
+    const qty = r.qty || 1, rate = r.amount;
+    if (r.direction === 'inward') {
+      inwardSupplies.push({ key:r.itemKey, name:item.name, hsn:item.hsn, gst:item.gst, qty, rate, taxable:qty*rate, pos:r.pos, itc:r.itc||'eligible' });
+    } else {
+      outwardSupplies.push({ key:r.itemKey, name:item.name, hsn:item.hsn, gst:item.gst, qty, rate, taxable:qty*rate, pos:r.pos, party:'B2B' });
+    }
+    added++;
+  });
+  renderOutward(); renderInward();
+  clearBulkPaste();
+  showToast(`${added} row(s) added${skipped?`, ${skipped} skipped (missing item/POS/amount)`:''}.`, added ? 'success' : 'warning');
+};
+
 document.addEventListener('change', function(e){
   if (e.target && e.target.id === 'supplierState') { renderOutward(); renderInward(); }
 });
 
 // ========== GST CALCULATION ENGINE ==========
 window.calculateGST = function() {
-  if (!checkUsageLimit()) return;
   const supplier = document.getElementById('supplierState').value;
   if (!supplier) { showToast('Please select the Supplier Location (Place of Registration) first.', 'error'); return; }
   if (outwardSupplies.length === 0) { showToast('Please add at least one outward supply item.', 'error'); return; }
-
-  if (!isUnlimited) {
-    usageCount++;
-    localStorage.setItem('gstUsageCount', usageCount.toString());
-    updateUsageUI();
-  }
 
   // ----- OUTPUT TAX -----
   let outCGST = 0, outSGST = 0, outUTGST = 0, outIGST = 0, outTaxable = 0;
@@ -728,14 +840,7 @@ window.calculateGST = function() {
   document.getElementById('reportCard').classList.add('show');
   document.querySelector('.tab[data-tab="calculator"]').click();
 
-  if (!isUnlimited && usageCount >= 5) {
-    showToast('You have used all 5 free calculations. Login for unlimited access.', 'warning');
-    setTimeout(() => document.getElementById('loginModal').classList.add('show'), 1000);
-  } else if (!isUnlimited) {
-    showToast(`Calculation complete! (${Math.max(0,5-usageCount)}/5 free uses remaining)`, 'success');
-  } else {
-    showToast('Calculation complete! (Unlimited mode)', 'success');
-  }
+  showToast('Calculation complete!', 'success');
 };
 
 function fmt(n){ return RS + ' ' + (n||0).toFixed(2); }
@@ -800,7 +905,7 @@ function renderReports(d){
   // ---- print header ----
   document.getElementById('reportHead').innerHTML = `
     <h2>GST Returns Working Sheet</h2>
-    <p>${d.legalName ? d.legalName+' &bull; ' : ''}${d.gstin ? 'GSTIN: '+d.gstin+' &bull; ' : ''}${d.supplierName} (${d.supplier})</p>
+    <p>${d.legalName ? escapeHtml(d.legalName)+' &bull; ' : ''}${d.gstin ? 'GSTIN: '+escapeHtml(d.gstin)+' &bull; ' : ''}${d.supplierName} (${d.supplier})</p>
     <p>Tax Period: ${periodLabel(d.taxPeriod)}</p>`;
 
   // ===== GSTR-1 : Outward supplies =====
@@ -929,7 +1034,7 @@ window.exportExcel = function(){
   const style = `<style>table{border-collapse:collapse;font-family:Calibri,Arial}td,th{border:1px solid #999;padding:4px 8px}th{background:#f3e9c8;font-weight:bold}.t{font-size:14px;font-weight:bold;background:#fbe9c2}.num{mso-number-format:"0.00"}</style>`;
   let h = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8">${style}</head><body>`;
   h += `<table><tr><td class="t" colspan="7">GST Returns Working Sheet</td></tr>`;
-  h += `<tr><td colspan="7">${d.legalName||''} ${d.gstin?('GSTIN: '+d.gstin):''} | ${d.supplierName} (${d.supplier}) | Period: ${periodLabel(d.taxPeriod)}</td></tr></table><br>`;
+  h += `<tr><td colspan="7">${escapeHtml(d.legalName||'')} ${d.gstin?('GSTIN: '+escapeHtml(d.gstin)):''} | ${d.supplierName} (${d.supplier}) | Period: ${periodLabel(d.taxPeriod)}</td></tr></table><br>`;
 
   // GSTR-1 line items
   h += `<table><tr><th colspan="9">GSTR-1 : Outward Supplies (line-wise)</th></tr>`;
@@ -1001,26 +1106,6 @@ function downloadFile(content, filename, mime){
   document.body.removeChild(a);
   setTimeout(()=>URL.revokeObjectURL(url), 1500);
 }
-
-// ========== LOGIN ==========
-window.handleLogin = function() {
-  const user = document.getElementById('loginUser').value.trim();
-  const pass = document.getElementById('loginPass').value.trim();
-  if (user === 'Aadi' && pass === 'Billu') {
-    isUnlimited = true;
-    localStorage.setItem('gstUnlimited', 'true');
-    document.getElementById('loginModal').classList.remove('show');
-    document.getElementById('usageCount').textContent = INF;
-    showToast('Unlimited access granted! Welcome, Aadi.', 'success');
-  } else {
-    document.getElementById('loginError').style.display = 'block';
-  }
-};
-window.closeLogin = function() {
-  document.getElementById('loginModal').classList.remove('show');
-  document.getElementById('loginError').style.display = 'none';
-};
-document.getElementById('loginModal').addEventListener('click', function(e) { if (e.target === this) closeLogin(); });
 
 // ========== TOAST ==========
 function showToast(msg, type = 'success') {
